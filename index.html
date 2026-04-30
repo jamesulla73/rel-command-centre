@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REL Command Centre</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #F8F8F7;
+    --surface: #FFFFFF;
+    --surface-2: #F2F1EE;
+    --border: rgba(0,0,0,0.08);
+    --border-md: rgba(0,0,0,0.12);
+    --text-1: #1A1A18;
+    --text-2: #5A5A55;
+    --text-3: #9A9A94;
+    --red: #A32D2D;
+    --red-bg: #FCEBEB;
+    --red-border: rgba(163,45,45,0.25);
+    --amber: #854F0B;
+    --amber-bg: #FAEEDA;
+    --amber-border: rgba(133,79,11,0.25);
+    --blue: #185FA5;
+    --blue-bg: #E6F1FB;
+    --blue-border: rgba(24,95,165,0.25);
+    --green: #3B6D11;
+    --green-bg: #EAF3DE;
+    --teams: #5558AF;
+    --r-md: 8px;
+    --r-lg: 12px;
+    --mono: 'Courier New', Courier, monospace;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text-1);
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  .db {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1.5rem 1.25rem;
+  }
+
+  /* HEADER */
+  .hdr {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 0.5px solid var(--border-md);
+  }
+  .hdr-l h1 { font-size: 20px; font-weight: 600; color: var(--text-1); letter-spacing: -0.3px; }
+  .hdr-l p { font-size: 12px; color: var(--text-2); margin-top: 2px; }
+  .hdr-r { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .time { font-size: 20px; font-weight: 600; font-family: var(--mono); color: var(--text-1); }
+  .date { font-size: 11px; color: var(--text-2); }
+  .live { display: inline-flex; align-items: center; gap: 5px; background: var(--green-bg); color: var(--green); font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 20px; letter-spacing: 0.05em; text-transform: uppercase; }
+  .live-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ALERT BAR */
+  .alert-bar {
+    background: var(--red-bg);
+    border: 0.5px solid var(--red-border);
+    border-radius: var(--r-md);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .alert-label { font-size: 10px; font-weight: 700; color: var(--red); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; }
+  .alert-pills { display: flex; flex-wrap: wrap; gap: 5px; }
+  .a-pill { font-size: 11px; background: #fff; border: 0.5px solid var(--red-border); color: var(--red); padding: 2px 9px; border-radius: 20px; }
+
+  /* KPI ROW */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; margin-bottom: 12px; }
+  .kpi { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-md); padding: 10px 13px; }
+  .kpi-label { font-size: 11px; color: var(--text-2); margin-bottom: 3px; }
+  .kpi-val { font-size: 17px; font-weight: 600; color: var(--text-1); font-family: var(--mono); }
+  .kpi-sub { font-size: 10px; margin-top: 3px; }
+  .kpi-up { color: var(--green); }
+  .kpi-dn { color: var(--red); }
+  .kpi-warn { color: var(--amber); }
+
+  /* TWO COLUMN LAYOUT */
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+
+  /* CARDS */
+  .card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); padding: 1rem 1.1rem; }
+  .card-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-3); margin-bottom: 10px; }
+
+  /* BRIEFING */
+  .briefing-text { font-size: 13px; color: var(--text-2); line-height: 1.65; border-left: 2.5px solid var(--blue-border); border-radius: 0; padding-left: 11px; margin-bottom: 10px; }
+  .briefing-footer { font-size: 10px; color: var(--text-3); }
+
+  /* CALENDAR */
+  .cal-item { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; border-bottom: 0.5px solid var(--border); }
+  .cal-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .cal-time { font-size: 10px; font-family: var(--mono); color: var(--text-2); width: 42px; flex-shrink: 0; padding-top: 2px; }
+  .cal-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .cd-teams { background: var(--teams); }
+  .cd-ext { background: var(--amber); }
+  .cd-block { background: var(--text-3); }
+  .cal-name { font-size: 12px; font-weight: 500; color: var(--text-1); }
+  .cal-meta { font-size: 10px; color: var(--text-3); margin-top: 1px; }
+  .join-btn { display: inline-block; margin-top: 4px; font-size: 10px; padding: 2px 8px; border-radius: 4px; border: 0.5px solid var(--blue-border); background: var(--blue-bg); color: var(--blue); text-decoration: none; font-weight: 500; cursor: pointer; }
+  .join-btn:hover { background: #D4E8F8; }
+
+  /* TASKS */
+  .task-item { display: flex; align-items: flex-start; gap: 9px; padding: 7px 0; border-bottom: 0.5px solid var(--border); }
+  .task-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .owner-init { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; flex-shrink: 0; }
+  .oi-a { background: var(--blue-bg); color: var(--blue); }
+  .oi-b { background: var(--amber-bg); color: var(--amber); }
+  .oi-c { background: var(--green-bg); color: var(--green); }
+  .oi-d { background: var(--red-bg); color: var(--red); }
+  .task-info { flex: 1; }
+  .task-name { font-size: 12px; color: var(--text-1); }
+  .task-due { font-size: 10px; margin-top: 2px; }
+  .due-over { color: var(--red); }
+  .due-today { color: var(--amber); }
+  .due-ok { color: var(--text-3); }
+  .task-status { font-size: 10px; padding: 1px 7px; border-radius: 4px; white-space: nowrap; font-weight: 500; }
+  .st-over { background: var(--red-bg); color: var(--red); border: 0.5px solid var(--red-border); }
+  .st-prog { background: var(--blue-bg); color: var(--blue); border: 0.5px solid var(--blue-border); }
+  .st-block { background: var(--amber-bg); color: var(--amber); border: 0.5px solid var(--amber-border); }
+
+  /* EMAILS */
+  .email-item { display: flex; gap: 9px; padding: 7px 0; border-bottom: 0.5px solid var(--border); cursor: pointer; }
+  .email-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .email-item:hover { background: var(--surface-2); margin: 0 -8px; padding: 7px 8px; border-radius: 6px; }
+  .email-flag { width: 3px; border-radius: 2px; flex-shrink: 0; align-self: stretch; min-height: 14px; }
+  .ef-red { background: var(--red); }
+  .ef-amber { background: var(--amber); }
+  .ef-blue { background: var(--blue); }
+  .email-from { font-size: 11px; font-weight: 600; color: var(--text-1); display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+  .email-subj { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+  .email-time { font-size: 10px; color: var(--text-3); margin-top: 2px; }
+  .email-tag { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; letter-spacing: 0.03em; }
+  .et-decision { background: var(--red-bg); color: var(--red); }
+  .et-review { background: var(--amber-bg); color: var(--amber); }
+  .et-info { background: var(--blue-bg); color: var(--blue); }
+
+  /* FOOTER LINK */
+  .card-footer { display: flex; justify-content: flex-end; margin-top: 10px; padding-top: 8px; border-top: 0.5px solid var(--border); }
+  .link-btn { font-size: 11px; color: var(--blue); background: none; border: none; cursor: pointer; padding: 0; font-family: inherit; }
+  .link-btn:hover { text-decoration: underline; }
+
+  /* RESPONSIVE */
+  @media (max-width: 640px) {
+    .kpi-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="db">
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-l">
+      <h1>REL Command Centre</h1>
+      <p>PT Resource Equipment Indonesia &nbsp;·&nbsp; James Ullathorne, CEO</p>
+    </div>
+    <div class="hdr-r">
+      <div class="time" id="clock">--:-- WIB</div>
+      <div class="date" id="datestr">Loading...</div>
+      <div class="live"><span class="live-dot"></span>Live</div>
+    </div>
+  </div>
+
+  <!-- ALERT BAR -->
+  <div class="alert-bar">
+    <div style="font-size:14px;flex-shrink:0;padding-top:1px;">⚑</div>
+    <div>
+      <div class="alert-label">Same-day attention required</div>
+      <div class="alert-pills">
+        <span class="a-pill">PT Darma Henwa — addendum awaiting signature</span>
+        <span class="a-pill">6 expired POs · IDR 847M exposure</span>
+        <span class="a-pill">Sumitomo board pack due Friday</span>
+        <span class="a-pill">3 team items overdue</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI ROW -->
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Cash position</div>
+      <div class="kpi-val">IDR 4.2B</div>
+      <div class="kpi-sub kpi-up">+IDR 380M vs last week</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Open POs</div>
+      <div class="kpi-val">24</div>
+      <div class="kpi-sub kpi-warn">6 expired — action needed</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Receivables due</div>
+      <div class="kpi-val">IDR 1.8B</div>
+      <div class="kpi-sub kpi-dn">2 overdue >30 days</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Month-to-date revenue</div>
+      <div class="kpi-val">IDR 6.1B</div>
+      <div class="kpi-sub kpi-up">81% of monthly target</div>
+    </div>
+  </div>
+
+  <!-- ROW 2: BRIEFING + CALENDAR -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">AI morning briefing</div>
+      <div class="briefing-text" id="briefing-text">
+        Priority today is the PT Darma Henwa addendum — legal confirmed the terms are clean, this needs your signature before 3pm or they escalate to their GM. The 6 expired POs are a compliance risk; Maritha can reissue but needs your approval on the IDR 847M total exposure. Sumitomo pack is 60% drafted — Anton needs your commentary on the Q1 variance by EOD tomorrow at the latest.
+      </div>
+      <div class="briefing-footer">Generated 06:00 WIB &nbsp;·&nbsp; Powered by Claude AI</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Today's calendar</div>
+
+      <div class="cal-item">
+        <div class="cal-time">08:30</div>
+        <div class="cal-dot cd-teams"></div>
+        <div>
+          <div class="cal-name">Weekly ops review</div>
+          <div class="cal-meta">Anton, Maritha, Dian &nbsp;·&nbsp; 60 min</div>
+          <a class="join-btn" href="https://teams.microsoft.com" target="_blank">Join Teams</a>
+        </div>
+      </div>
+
+      <div class="cal-item">
+        <div class="cal-time">11:00</div>
+        <div class="cal-dot cd-ext"></div>
+        <div>
+          <div class="cal-name">PT Darma Henwa — contract review</div>
+          <div class="cal-meta">External &nbsp;·&nbsp; Conference room B</div>
+        </div>
+      </div>
+
+      <div class="cal-item">
+        <div class="cal-time">14:00</div>
+        <div class="cal-dot cd-teams"></div>
+        <div>
+          <div class="cal-name">Sumitomo board prep call</div>
+          <div class="cal-meta">Anton, Finance team &nbsp;·&nbsp; 45 min</div>
+          <a class="join-btn" href="https://teams.microsoft.com" target="_blank">Join Teams</a>
+        </div>
+      </div>
+
+      <div class="cal-item">
+        <div class="cal-time">16:30</div>
+        <div class="cal-dot cd-block"></div>
+        <div>
+          <div class="cal-name">Focus block — Sumitomo commentary</div>
+          <div class="cal-meta">No interruptions</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROW 3: TASKS + EMAILS -->
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Team action items</div>
+
+      <div class="task-item">
+        <div class="owner-init oi-a">MR</div>
+        <div class="task-info">
+          <div class="task-name">Cash reconciliation — April</div>
+          <div class="task-due due-over">Maritha Dewi &nbsp;·&nbsp; Overdue 2 days</div>
+        </div>
+        <div class="task-status st-over">Overdue</div>
+      </div>
+
+      <div class="task-item">
+        <div class="owner-init oi-b">AW</div>
+        <div class="task-info">
+          <div class="task-name">Sumitomo Q1 variance report</div>
+          <div class="task-due due-today">Anton Wijaya &nbsp;·&nbsp; Due today</div>
+        </div>
+        <div class="task-status st-prog">In progress</div>
+      </div>
+
+      <div class="task-item">
+        <div class="owner-init oi-c">DS</div>
+        <div class="task-info">
+          <div class="task-name">Fleet maintenance schedule update</div>
+          <div class="task-due due-ok">Dian Saputra &nbsp;·&nbsp; Due Fri 3 May</div>
+        </div>
+        <div class="task-status st-prog">In progress</div>
+      </div>
+
+      <div class="task-item">
+        <div class="owner-init oi-d">HS</div>
+        <div class="task-info">
+          <div class="task-name">PO renewal — expired batch</div>
+          <div class="task-due due-over">Hendra Santoso &nbsp;·&nbsp; Overdue 5 days</div>
+        </div>
+        <div class="task-status st-block">Blocked</div>
+      </div>
+
+      <div class="card-footer">
+        <a class="link-btn" href="https://tasks.office.com" target="_blank">Open Microsoft Planner →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Critical emails — inbox</div>
+
+      <div class="email-item" onclick="window.open('https://outlook.office.com','_blank')">
+        <div class="email-flag ef-red"></div>
+        <div>
+          <div class="email-from">PT Darma Henwa Legal <span class="email-tag et-decision">Decision needed</span></div>
+          <div class="email-subj">Addendum 3B — signature requested by 15:00</div>
+          <div class="email-time">08:14 WIB &nbsp;·&nbsp; l.susanto@dh.co.id</div>
+        </div>
+      </div>
+
+      <div class="email-item" onclick="window.open('https://outlook.office.com','_blank')">
+        <div class="email-flag ef-amber"></div>
+        <div>
+          <div class="email-from">Maritha Dewi <span class="email-tag et-review">Review needed</span></div>
+          <div class="email-subj">April cashbook — 6 PO discrepancies flagged</div>
+          <div class="email-time">07:31 WIB &nbsp;·&nbsp; internal</div>
+        </div>
+      </div>
+
+      <div class="email-item" onclick="window.open('https://outlook.office.com','_blank')">
+        <div class="email-flag ef-amber"></div>
+        <div>
+          <div class="email-from">Anton Wijaya <span class="email-tag et-review">Review needed</span></div>
+          <div class="email-subj">Sumitomo pack — Q1 commentary draft attached</div>
+          <div class="email-time">Yesterday 22:47 WIB &nbsp;·&nbsp; internal</div>
+        </div>
+      </div>
+
+      <div class="email-item" onclick="window.open('https://outlook.office.com','_blank')">
+        <div class="email-flag ef-blue"></div>
+        <div>
+          <div class="email-from">Sumitomo Corp Tokyo <span class="email-tag et-info">FYI</span></div>
+          <div class="email-subj">Board meeting agenda — 9 May confirmed</div>
+          <div class="email-time">Yesterday 16:03 WIB</div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <a class="link-btn" href="https://outlook.office.com" target="_blank">Open Outlook →</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  function tick() {
+    const now = new Date();
+    const t = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' });
+    const d = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Jakarta' });
+    document.getElementById('clock').textContent = t + ' WIB';
+    document.getElementById('datestr').textContent = d;
+  }
+  tick();
+  setInterval(tick, 30000);
+</script>
+</body>
+</html>
